@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using KebabBot;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.IO;
 using Victoria;
 using Victoria.Node;
 
@@ -12,6 +13,7 @@ public class KebabBotProgram
 
     private readonly IConfiguration _configuration;
     private readonly IServiceProvider _services;
+    private string _token;
 
     private readonly DiscordSocketConfig _socketConfig = new()
     {
@@ -49,7 +51,9 @@ public class KebabBotProgram
         await _services.GetRequiredService<InteractionHandler>()
             .InitializeAsync();
 
-        await client.LoginAsync(TokenType.Bot, "MTEzNjM2MTc2MjY4MjMyMzAyNg.GQTwWS.upvD8U9QO96yxDL7eJsSjbjdpeTptJOnwRu95k");
+        using (StreamReader sr = new("C:\\Program Files\\KebabBot\\token.txt")) _token =  sr.ReadToEnd();
+
+        await client.LoginAsync(TokenType.Bot, _token);
         await client.StartAsync();
 
         await Task.Delay(Timeout.Infinite);
