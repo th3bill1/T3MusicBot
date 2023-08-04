@@ -35,17 +35,20 @@ namespace KebabBot.Modules
        
 
 
-        /*[SlashCommand("gpt", "promptuje chat-gpt")]
+        [SlashCommand("gpt", "promptuje chat-gpt")]
         public async Task GPTPrompt(string text)
         {
-            IOpenAIProxy chatOpenAI = new OpenAIProxy(apiKey: "", organizationId: "");
+            var msg = await Context.Channel.SendMessageAsync("Daj mi chwile");
+            IOpenAIProxy chatOpenAI = new OpenAIProxy(apiKey: "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", organizationId: "");
             var results = await chatOpenAI.SendChatMessage(text);
 
+            var respond = "";
             foreach (var item in results)
             {
-                Console.WriteLine($"{item.Role}: {item.Content}");
+                respond += item.Content;
             }
-        }*/
+            await msg.ModifyAsync(msg => msg.Content = respond);
+        }
 
 
         [UserCommand("zwyzywaj")]

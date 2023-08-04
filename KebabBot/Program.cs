@@ -30,6 +30,7 @@ public class KebabBotProgram
         _services = new ServiceCollection()
             .AddLogging()
             .AddLavaNode()
+            .AddSingleton<MusicManager>()
             .AddSingleton(_configuration)
             .AddSingleton(_socketConfig)
             .AddSingleton<LavaNode>()
