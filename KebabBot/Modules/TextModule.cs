@@ -39,7 +39,7 @@ namespace KebabBot.Modules
         public async Task GPTPrompt(string text)
         {
             var msg = await Context.Channel.SendMessageAsync("Daj mi chwile");
-            IOpenAIProxy chatOpenAI = new OpenAIProxy(apiKey: "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", organizationId: "");
+            IOpenAIProxy chatOpenAI = new OpenAIProxy(apiKey: "", organizationId: "");
             var results = await chatOpenAI.SendChatMessage(text);
 
             var respond = "";
