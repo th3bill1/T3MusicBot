@@ -2,6 +2,7 @@
 using Discord.Interactions;
 using Discord.WebSocket;
 using KebabBot;
+using KebabBot.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.IO;
@@ -52,7 +53,7 @@ public class KebabBotProgram
         await _services.GetRequiredService<InteractionHandler>()
             .InitializeAsync();
 
-        using (StreamReader sr = new("C:\\Program Files\\KebabBot\\token.txt")) _token =  sr.ReadToEnd();
+        using (StreamReader sr = new("C:\\Program Files\\KebabBot\\discord_token.txt")) _token =  sr.ReadToEnd();
 
         await client.LoginAsync(TokenType.Bot, _token);
         await client.StartAsync();

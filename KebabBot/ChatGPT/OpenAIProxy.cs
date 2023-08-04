@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,18 +13,19 @@ namespace KebabBot.ChatGPT
     public class OpenAIProxy : IOpenAIProxy
     {
         readonly OpenAIClient openAIClient;
+        readonly string token_location = "C:\\Program Files\\KebabBot\\gpt_token.txt";
 
         //all messages in the conversation
         readonly List<ChatCompletionMessage> _messages;
 
-        public OpenAIProxy(string apiKey, string organizationId)
+        public OpenAIProxy(string organizationId)
         {
             //initialize the configuration with api key and sub
             var openAIConfigurations = new OpenAIConfigurations
             {
-                ApiKey = apiKey,
                 OrganizationId = organizationId
             };
+            using (StreamReader sr = new(token_location)) openAIConfigurations.ApiKey = sr.ReadToEnd();
 
             openAIClient = new OpenAIClient(openAIConfigurations);
 

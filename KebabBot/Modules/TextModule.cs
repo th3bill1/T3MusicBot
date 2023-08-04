@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using KebabBot.ChatGPT;
 using Discord.Audio;
 using System.Diagnostics;
+using KebabBot.Services;
 
 namespace KebabBot.Modules
 {
@@ -39,7 +40,7 @@ namespace KebabBot.Modules
         public async Task GPTPrompt(string text)
         {
             var msg = await Context.Channel.SendMessageAsync("Daj mi chwile");
-            IOpenAIProxy chatOpenAI = new OpenAIProxy(apiKey: "", organizationId: "");
+            IOpenAIProxy chatOpenAI = new OpenAIProxy(organizationId: "");
             var results = await chatOpenAI.SendChatMessage(text);
 
             var respond = "";
@@ -50,6 +51,15 @@ namespace KebabBot.Modules
             await msg.ModifyAsync(msg => msg.Content = respond);
         }
 
+        [SlashCommand("pogoda", "Obecna pogoda dla danego miasta")]
+        public async Task Weather(string miasto)
+        {
+            await RespondAsync("**Pogoda na dziś** :sun_with_face:");
+            var msg = await Context.Channel.SendMessageAsync("Pobieranie danych dotyczących pogody...");
+            var weatherservice = new WeatherService();
+            var weather = weatherservice.GetWeatherAsync(miasto).Result;
+            await msg.ModifyAsync(msg => msg.Content = $"\nMiasto: {weather.Name}\nTemperatura: {((int)weather.Temperature.Value)}°C");
+        }
 
         [UserCommand("zwyzywaj")]
         public async Task GreetUserAsync(IUser user)

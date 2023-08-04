@@ -8,7 +8,7 @@ using Victoria.Node;
 using Victoria.Node.EventArgs;
 using Victoria.Player;
 
-namespace KebabBot
+namespace KebabBot.Services
 {
     public class AudioService
     {

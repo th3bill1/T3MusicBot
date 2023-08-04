@@ -2,9 +2,11 @@
 using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using Victoria.Node;
 
 
 namespace KebabBot
@@ -15,6 +17,7 @@ namespace KebabBot
         private readonly InteractionService _handler;
         private readonly IServiceProvider _services;
         private readonly IConfiguration _configuration;
+        private readonly LavaNode _lavaNode;
 
         public InteractionHandler(DiscordSocketClient client, InteractionService handler, IServiceProvider services, IConfiguration config)
         {
@@ -22,6 +25,7 @@ namespace KebabBot
             _handler = handler;
             _services = services;
             _configuration = config;
+            _lavaNode = _services.GetRequiredService<LavaNode>();
         }
 
         public async Task InitializeAsync()
@@ -44,7 +48,10 @@ namespace KebabBot
         {
             // Context & Slash commands can be automatically registered, but this process needs to happen after the client enters the READY state.
             // Since Global Commands take around 1 hour to register, we should use a test guild to instantly update and test our commands.
+            await _lavaNode.ConnectAsync();
             await _handler.RegisterCommandsGloballyAsync(true);
+
+            
         }
 
         private async Task HandleInteraction(SocketInteraction interaction)
