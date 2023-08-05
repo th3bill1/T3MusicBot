@@ -12,14 +12,12 @@ namespace KebabBot.Modules
     {
         private readonly LavaNode _lavaNode;
         private readonly AudioService _audioService;
-        //private readonly MusicManager _musicManager;
         private static readonly IEnumerable<int> Range = Enumerable.Range(1900, 2000);
 
-        private AudioModule(LavaNode lavaNode, AudioService audioService/*, MusicManager musicManager*/)
+        private AudioModule(LavaNode lavaNode, AudioService audioService)
         {
             _lavaNode = lavaNode;
             _audioService = audioService;
-            //_musicManager = musicManager;
         }
 
         [SlashCommand("join", "Dołącza do kanału głosowego")]

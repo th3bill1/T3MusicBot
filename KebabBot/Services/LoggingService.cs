@@ -9,7 +9,6 @@ namespace KebabBot.Services
 {
     public static class LoggingService
     {
-        /* The Standard Way Log */
         public static async Task LogAsync(string src, LogSeverity severity, string message, Exception exception = null)
         {
             if (severity.Equals(null))
@@ -31,15 +30,12 @@ namespace KebabBot.Services
                 await Append($"{exception.Message ?? "Unknownk"}\n{exception.StackTrace ?? "Unknown"}\n", GetConsoleColor(severity));
         }
 
-        /* The Way To Log Critical Errors*/
         public static async Task LogCriticalAsync(string source, string message, Exception exc = null)
             => await LogAsync(source, LogSeverity.Critical, message, exc);
 
-        /* The Way To Log Basic Infomation */
         public static async Task LogInformationAsync(string source, string message)
             => await LogAsync(source, LogSeverity.Info, message);
 
-        /* Format The Output */
         private static async Task Append(string message, ConsoleColor color)
         {
             await Task.Run(() => {
@@ -48,7 +44,6 @@ namespace KebabBot.Services
             });
         }
 
-        /* Swap The Normal Source Input To Something Neater */
         private static string SourceToString(string src)
         {
             switch (src.ToLower())
@@ -76,7 +71,6 @@ namespace KebabBot.Services
             }
         }
 
-        /* Swap The Severity To a String So We Can Output It To The Console */
         private static string GetSeverityString(LogSeverity severity)
         {
             switch (severity)
@@ -97,7 +91,6 @@ namespace KebabBot.Services
             }
         }
 
-        /* Return The Console Color Based On Severity Selected */
         private static ConsoleColor GetConsoleColor(LogSeverity severity)
         {
             switch (severity)
