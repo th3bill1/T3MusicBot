@@ -1,13 +1,7 @@
 ﻿using OpenWeatherMap;
 using OpenWeatherMap.Entities;
 using OpenWeatherMap.Util;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 
 namespace KebabBot.Services
 {

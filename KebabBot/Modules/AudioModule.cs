@@ -1,15 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
-using Victoria;
 using Victoria.Node;
 using Victoria.Player;
-using Victoria.Resolvers;
 using Victoria.Responses.Search;
 using Discord.Interactions;
 using KebabBot.Services;
@@ -20,14 +12,14 @@ namespace KebabBot.Modules
     {
         private readonly LavaNode _lavaNode;
         private readonly AudioService _audioService;
-        private readonly MusicManager _musicManager;
+        //private readonly MusicManager _musicManager;
         private static readonly IEnumerable<int> Range = Enumerable.Range(1900, 2000);
 
-        private AudioModule(LavaNode lavaNode, AudioService audioService, MusicManager musicManager)
+        private AudioModule(LavaNode lavaNode, AudioService audioService/*, MusicManager musicManager*/)
         {
             _lavaNode = lavaNode;
             _audioService = audioService;
-            _musicManager = musicManager;
+            //_musicManager = musicManager;
         }
 
         [SlashCommand("join", "Dołącza do kanału głosowego")]

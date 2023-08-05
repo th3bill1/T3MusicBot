@@ -1,5 +1,4 @@
-﻿using KebabBot;
-using Discord;
+﻿using Discord;
 using Discord.Interactions;
 using System;
 using System.Threading.Tasks;
@@ -7,6 +6,7 @@ using KebabBot.ChatGPT;
 using Discord.Audio;
 using System.Diagnostics;
 using KebabBot.Services;
+using KebabBot.Handlers;
 
 namespace KebabBot.Modules
 {
