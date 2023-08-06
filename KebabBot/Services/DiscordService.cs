@@ -44,8 +44,6 @@ namespace KebabBot.Services
             _client.Log += LogAsync;
         }
 
-
-        /* Used when the Client Fires the ReadyEvent. */
         private async Task ReadyAsync()
         {
             try
@@ -60,14 +58,11 @@ namespace KebabBot.Services
 
         }
 
-        /*Used whenever we want to log something to the Console. 
-            Todo: Hook in a Custom LoggingService. */
         private async Task LogAsync(LogMessage logMessage)
         {
             await LoggingService.LogAsync(logMessage.Source, logMessage.Severity, logMessage.Message);
         }
 
-        /* Configure our Services for Dependency Injection. */
         private ServiceProvider ConfigureServices()
         {
             return new ServiceCollection()
@@ -77,7 +72,7 @@ namespace KebabBot.Services
                 .AddSingleton<CommandService>()
                 .AddSingleton<InteractionHandler>()
                 .AddSingleton<LavaNode>()
-                .AddSingleton(new NodeConfiguration())
+                .AddSingleton(new NodeConfiguration()) 
                 .AddSingleton<AudioService>()
                 .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
                 .BuildServiceProvider();

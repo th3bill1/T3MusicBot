@@ -60,6 +60,15 @@ namespace KebabBot.Modules
             var weather = weatherservice.GetWeatherAsync(miasto).Result;
             await msg.ModifyAsync(msg => msg.Content = $"\nMiasto: {weather.Name}\nTemperatura: {((int)weather.Temperature.Value)}°C");
         }
+        [SlashCommand("tekst", "Tekst do wybranej piosenki")]
+        public async Task Lyrics(string tytuł)
+        {
+            await RespondAsync($"Tekst do piosenki {tytuł}");
+            var msg = await Context.Channel.SendMessageAsync("Pobieranie tekstu piosenki...");
+            var geniusservce = new GeniusService();
+            var lyrics = geniusservce.GetLyricsByName(tytuł);
+            await msg.ModifyAsync(msg => msg.Content = lyrics);
+        }
 
         [UserCommand("zwyzywaj")]
         public async Task GreetUserAsync(IUser user)

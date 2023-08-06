@@ -7,7 +7,7 @@ namespace KebabBot.Services
 {
     public class WeatherService
     {
-        private readonly string token_location = "C:\\Program Files\\KebabBot\\openweather_token.txt";
+        private readonly string token_location = "C:\\Program Files\\KebabBot\\genius_token.txt";
         private string _token;
         private OpenWeatherMapService _service;
 
