@@ -338,8 +338,8 @@ namespace Victoria.Node {
             return Task.CompletedTask;
         }
 
-        private Task OnErrorAsync(ErrorEventArgs arg) {
-            _logger.LogError(arg.Exception, arg.Message);
+        private Task OnErrorAsync(System.IO.ErrorEventArgs arg) {
+            /*_logger.LogError(arg.Exception, arg.Message);*/
             return Task.CompletedTask;
         }
 

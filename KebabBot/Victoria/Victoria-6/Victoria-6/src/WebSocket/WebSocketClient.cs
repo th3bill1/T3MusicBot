@@ -27,7 +27,7 @@ namespace Victoria.WebSocket {
         /// <summary>
         /// 
         /// </summary>
-        public event Func<ErrorEventArgs, Task> OnErrorAsync;
+        public event Func<System.IO.ErrorEventArgs, Task> OnErrorAsync;
 
         /// <summary>
         /// 
@@ -104,7 +104,7 @@ namespace Victoria.WebSocket {
 
             async Task VerifyConnectionAsync(Task task) {
                 if (task.Exception != null) {
-                    await OnErrorAsync.Invoke(new ErrorEventArgs(task.Exception));
+                    await OnErrorAsync.Invoke(new System.IO.ErrorEventArgs(task.Exception));
                     await ReconnectAsync();
                     return;
                 }
@@ -147,7 +147,7 @@ namespace Victoria.WebSocket {
                 await _webSocket.CloseAsync(closeStatus, closeReason, _connectionTokenSource.Token);
             }
             catch (Exception exception) {
-                await OnErrorAsync.Invoke(new ErrorEventArgs(exception));
+                await OnErrorAsync.Invoke(new System.IO.ErrorEventArgs(exception));
             }
             finally {
                 IsConnected = false;
@@ -188,7 +188,7 @@ namespace Victoria.WebSocket {
                 }
             }
             catch (Exception exception) {
-                await OnErrorAsync.Invoke(new ErrorEventArgs(exception));
+                await OnErrorAsync.Invoke(new System.IO.ErrorEventArgs(exception));
             }
         }
 
@@ -233,7 +233,7 @@ namespace Victoria.WebSocket {
                     return;
                 }
 
-                await OnErrorAsync.Invoke(new ErrorEventArgs(exception));
+                await OnErrorAsync.Invoke(new   System.IO.ErrorEventArgs(exception));
             }
         }
 
@@ -251,7 +251,7 @@ namespace Victoria.WebSocket {
                          !_connectionTokenSource.IsCancellationRequested);
             }
             catch (Exception exception) {
-                await OnErrorAsync.Invoke(new ErrorEventArgs(exception));
+                await OnErrorAsync.Invoke(new System.IO.ErrorEventArgs(exception));
             }
         }
 
