@@ -1,10 +1,13 @@
 ﻿using KebabBot.Services;
 
-public class KebabBotProgram
+namespace KebabBot
 {
-    class Program
+    public class KebabBotProgram
     {
-        public static Task Main()
-            => new DiscordService().InitializeAsync();
+        class Program
+        {
+            public static Task Main()
+                => new DiscordService().InitializeAsync();
+        }
     }
 }
