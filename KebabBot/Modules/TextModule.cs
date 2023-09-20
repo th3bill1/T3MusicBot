@@ -7,6 +7,8 @@ using Discord.Audio;
 using System.Diagnostics;
 using KebabBot.Services;
 using KebabBot.Handlers;
+using Victoria.Node;
+using System.Security.Policy;
 
 namespace KebabBot.Modules
 {
@@ -39,7 +41,8 @@ namespace KebabBot.Modules
         [SlashCommand("gpt", "promptuje chat-gpt")]
         public async Task GPTPrompt(string text)
         {
-            var msg = await Context.Channel.SendMessageAsync("Daj mi chwile");
+            await RespondAsync("Za chwilę otrzymasz odpowiedź!", ephemeral: true);
+            var msg = await Context.Channel.SendMessageAsync("Generuję odpowiedź...");
             IOpenAIProxy chatOpenAI = new OpenAIProxy(organizationId: "");
             var results = await chatOpenAI.SendChatMessage(text);
 
@@ -60,16 +63,6 @@ namespace KebabBot.Modules
             var weather = weatherservice.GetWeatherAsync(miasto).Result;
             await msg.ModifyAsync(msg => msg.Content = $"\nMiasto: {weather.Name}\nTemperatura: {((int)weather.Temperature.Value)}°C");
         }
-        [SlashCommand("tekst", "Tekst do wybranej piosenki")]
-        public async Task Lyrics(string tytuł)
-        {
-            await RespondAsync($"Tekst do piosenki {tytuł}");
-            var msg = await Context.Channel.SendMessageAsync("Pobieranie tekstu piosenki...");
-            var geniusservce = new GeniusService();
-            var lyrics = geniusservce.GetLyricsByName(tytuł);
-            await msg.ModifyAsync(msg => msg.Content = lyrics);
-        }
-
         [UserCommand("zwyzywaj")]
         public async Task GreetUserAsync(IUser user)
             => await RespondAsync(text: $"{user.Mention} to chuj \n ~{Context.User.Mention}");
@@ -88,6 +81,15 @@ namespace KebabBot.Modules
                 await userMessage.PinAsync();
                 await RespondAsync(":white_check_mark: Gitara!");
             }
+        }
+        [SlashCommand("czystka","czyści wybraną liczbę wiadomości")]
+        public async Task ClearChat(int amount)
+        {
+            const int delay = 5000;
+            await RespondAsync($"Zarządano usunięcia {amount} wiadomości. Ta wiadomość zniknie za {delay/1000} sekund.");
+            var messages = await Context.Channel.GetMessagesAsync(amount+1).FlattenAsync();
+            await Task.Delay(delay);
+            foreach (var message in messages) await message.DeleteAsync();
         }
     }
 }

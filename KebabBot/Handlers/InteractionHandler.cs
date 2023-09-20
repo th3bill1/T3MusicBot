@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using Victoria.Node;
 
 
@@ -22,6 +23,23 @@ namespace KebabBot.Handlers
             _client = client;
             _handler = handler;
             _services = services;
+        }
+        public async Task InitializeAsync()
+        {
+            // Process when the client is ready, so we can register our commands.
+            _client.Ready += ReadyAsync;
+            _handler.Log += LogAsync;
+
+            // Add the public modules that inherit InteractionModuleBase<T> to the InteractionService
+            await _handler.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+
+            // Process the InteractionCreated payloads to execute Interactions commands
+            _client.InteractionCreated += HandleInteraction;
+        }
+
+        private async Task ReadyAsync()
+        {
+            await _handler.RegisterCommandsGloballyAsync(true);
         }
 
         private async Task HandleInteraction(SocketInteraction interaction)
@@ -47,5 +65,7 @@ namespace KebabBot.Handlers
                     await interaction.GetOriginalResponseAsync().ContinueWith(async (msg) => await msg.Result.DeleteAsync());
             }
         }
+        private async Task LogAsync(LogMessage log)
+            => Console.WriteLine(log);
     }
 }

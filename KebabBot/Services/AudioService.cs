@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions.Execution;
 using Microsoft.Extensions.Logging;
 using Victoria.Node;
 using Victoria.Node.EventArgs;
@@ -28,7 +29,6 @@ namespace KebabBot.Services
             _lavaNode.OnTrackEnd += OnTrackEndAsync;
             _lavaNode.OnTrackStart += OnTrackStartAsync;
             _lavaNode.OnStatsReceived += OnStatsReceivedAsync;
-            _lavaNode.OnUpdateReceived += OnUpdateReceivedAsync;
             _lavaNode.OnWebSocketClosed += OnWebSocketClosedAsync;
             _lavaNode.OnTrackStuck += OnTrackStuckAsync;
             _lavaNode.OnTrackException += OnTrackExceptionAsync;
@@ -37,13 +37,13 @@ namespace KebabBot.Services
         private static Task OnTrackExceptionAsync(TrackExceptionEventArg<LavaPlayer<LavaTrack>, LavaTrack> arg)
         {
             arg.Player.Vueue.Enqueue(arg.Track);
-            return arg.Player.TextChannel.SendMessageAsync($"{arg.Track} has been requeued because it threw an exception.");
+            return arg.Player.TextChannel.SendMessageAsync($"{arg.Track} rzucił wyjątek :(");
         }
 
         private static Task OnTrackStuckAsync(TrackStuckEventArg<LavaPlayer<LavaTrack>, LavaTrack> arg)
         {
             arg.Player.Vueue.Enqueue(arg.Track);
-            return arg.Player.TextChannel.SendMessageAsync($"{arg.Track} has been requeued because it got stuck.");
+            return arg.Player.TextChannel.SendMessageAsync($"{arg.Track} utknął w pralce");
         }
 
         private Task OnWebSocketClosedAsync(WebSocketClosedEventArg arg)
@@ -58,20 +58,36 @@ namespace KebabBot.Services
             return Task.CompletedTask;
         }
 
-        private static Task OnUpdateReceivedAsync(UpdateEventArg<LavaPlayer<LavaTrack>, LavaTrack> arg)
-        {
-            return arg.Player.TextChannel.SendMessageAsync(
-                $"Player update received: {arg.Position}/{arg.Track?.Duration}");
-        }
-
         private static Task OnTrackStartAsync(TrackStartEventArg<LavaPlayer<LavaTrack>, LavaTrack> arg)
         {
-            return arg.Player.TextChannel.SendMessageAsync($"Started playing {arg.Track}.");
+            return arg.Player.TextChannel.SendMessageAsync($"Puszczam nutke: {arg.Track.Title}.");
         }
 
-        private static Task OnTrackEndAsync(TrackEndEventArg<LavaPlayer<LavaTrack>, LavaTrack> arg)
+        private static async Task OnTrackEndAsync(TrackEndEventArg<LavaPlayer<LavaTrack>, LavaTrack> arg)
         {
-            return arg.Player.TextChannel.SendMessageAsync($"Finished playing {arg.Track}.");
+            if (arg.Reason!=Victoria.Player.TrackEndReason.Finished)
+            {
+                return;
+            }
+            var player = arg.Player;
+            if (!player.Vueue.TryDequeue(out var queueable))
+            {
+                await player.TextChannel.SendMessageAsync("Koniec piosenek w kolejce!");
+                return;
+            }
+
+            if (queueable is not LavaTrack track)
+            {
+                await player.TextChannel.SendMessageAsync("Następne element w kolejce nie jest piosenką!");
+                return;
+            }
+            var volume = player.Volume;
+            await arg.Player.PlayAsync(track);
+            await arg.Player.SetVolumeAsync(volume);
+            
+            if(arg.Reason==TrackEndReason.Finished) await arg.Player.TextChannel.SendMessageAsync($"Koniec {arg.Track.Title}");
+            if (arg.Reason == TrackEndReason.Stopped) await arg.Player.TextChannel.SendMessageAsync($"Pominięto {arg.Track.Title}");
+
         }
     }
 }
