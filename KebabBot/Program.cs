@@ -4,7 +4,7 @@ public class KebabBotProgram
 {
     class Program
     {
-        private static Task Main()
+        public static Task Main()
             => new DiscordService().InitializeAsync();
     }
 }
