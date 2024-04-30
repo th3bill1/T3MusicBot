@@ -7,7 +7,6 @@ using Discord.Audio;
 using System.Diagnostics;
 using KebabBot.Services;
 using KebabBot.Handlers;
-using Victoria.Node;
 using System.Security.Policy;
 
 namespace KebabBot.Modules

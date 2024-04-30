@@ -2,11 +2,10 @@
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using KebabBot.Handlers;
-using Victoria.Node;
 using Discord.Commands;
-using System.IO;
 using Discord.Interactions;
 using Victoria;
+using Microsoft.Extensions.Logging;
 
 namespace KebabBot.Services
 {
@@ -15,7 +14,7 @@ namespace KebabBot.Services
         private readonly DiscordSocketClient _client;
         private readonly InteractionHandler _interactionHandler;
         private readonly ServiceProvider _services;
-        private readonly LavaNode _lavaNode;
+        private readonly LavaNode<LavaPlayer<LavaTrack>,LavaTrack> _lavaNode;
         private readonly AudioService _audioService;
         private string _token;
         private string lavalink_hostname;
@@ -26,7 +25,7 @@ namespace KebabBot.Services
             _services = ConfigureServices();
             _client = _services.GetRequiredService<DiscordSocketClient>();
             _interactionHandler = _services.GetRequiredService<InteractionHandler>();
-            _lavaNode = _services.GetRequiredService<LavaNode>();
+            _lavaNode = _services.GetRequiredService<LavaNode<LavaPlayer<LavaTrack>, LavaTrack>>();
             _audioService = _services.GetRequiredService<AudioService>();
             using (StreamReader sr = new("C:\\Program Files\\KebabBot\\discord_token.txt")) _token = sr.ReadToEnd();
 
@@ -56,14 +55,14 @@ namespace KebabBot.Services
             }
             catch (Exception ex)
             {
-                //await LoggingService.LogInformationAsync(ex.Source, ex.Message);
+                await LoggingService.LogInformationAsync(ex.Source, ex.Message);
             }
 
         }
 
         private async Task LogAsync(LogMessage logMessage)
         {
-            //await LoggingService.LogAsync(logMessage.Source, logMessage.Severity, logMessage.Message);
+            await LoggingService.LogAsync(logMessage.Source, logMessage.Severity, logMessage.Message);
         }
 
         private ServiceProvider ConfigureServices()
@@ -74,14 +73,18 @@ namespace KebabBot.Services
                 lavalink_port = sr.ReadLine();
             }
 
+
             return new ServiceCollection()
-                .AddLogging()
                 .AddLavaNode()
-                .AddSingleton<DiscordSocketClient>()
+                .AddLogging()
+                .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
+                {
+                    LogLevel = LogSeverity.Debug,
+                    GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent
+                }))
                 .AddSingleton<CommandService>()
                 .AddSingleton<InteractionHandler>()
-                .AddSingleton<LavaNode>()
-                .AddSingleton(new NodeConfiguration() { Hostname = lavalink_hostname, Port = Convert.ToUInt16(lavalink_port)}) 
+                .AddSingleton(new Configuration() { Hostname = lavalink_hostname, Port = Convert.ToUInt16(lavalink_port) })
                 .AddSingleton<AudioService>()
                 .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
                 .BuildServiceProvider();

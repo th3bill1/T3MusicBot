@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<Version>7.0</Version>
+		<Title>Victoria</Title>
+		<Authors>Yucked; Contributors</Authors>
+		<Copyright>2018 - 2024 Yucked. All rights reserved.</Copyright>
+		<PackageIcon>icon.png</PackageIcon>
+		<PackageTags>Lavalink, Wrapper, Discord, Discord.NET, Music, Yucked, Lavalink NET, Sharplink</PackageTags>
+		<PackageProjectUrl>https://github.com/Yucked/Victoria</PackageProjectUrl>
+		<Description>🌋 - Lavalink wrapper for Discord.NET, DSharpPlus and any other .NET based Discord API wrappers. Provides more options and performs better than all .NET Lavalink libraries combined.</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="icon.png" Pack="true" Visible="false" PackagePath=""/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Discord.Net.WebSocket" Version="3.12.0"/>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0"/>
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1"/>
+	</ItemGroup>
+</Project>

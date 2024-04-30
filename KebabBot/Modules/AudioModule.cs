@@ -1,37 +1,24 @@
 ﻿using Discord;
 using Discord.Commands;
-using Victoria.Node;
-using Victoria.Player;
-using Victoria.Responses.Search;
 using Discord.Interactions;
 using KebabBot.Services;
-using System.Text;
 using Victoria;
+using Victoria.Rest.Search;
 
 namespace KebabBot.Modules
 {
-    public class AudioModule : InteractionModuleBase<SocketInteractionContext>
+    public class AudioModule(
+    LavaNode<LavaPlayer<LavaTrack>, LavaTrack> lavaNode,
+    AudioService audioService)
+    : InteractionModuleBase<SocketInteractionContext>
     {
-        private readonly LavaNode _lavaNode;
-        private readonly AudioService _audioService;
         private static readonly IEnumerable<int> Range = Enumerable.Range(1900, 2000);
-        private int _volume = 10;
+        private static int volume = 10;
 
-        private AudioModule(LavaNode lavaNode, AudioService audioService)
-        {
-            _lavaNode = lavaNode;
-            _audioService = audioService;
-        }
         [SlashCommand("leave", "Opuszcza kanał głosowy")]
         public async Task LeaveAsync()
         {
-            if (!_lavaNode.TryGetPlayer(Context.Guild, out var player))
-            {
-                await RespondAsync("Nie jestem na żadnym kanale głosowym!");
-                return;
-            }
-
-            var voiceChannel = (Context.User as IVoiceState).VoiceChannel ?? player.VoiceChannel;
+            var voiceChannel = (Context.User as IVoiceState).VoiceChannel;
             if (voiceChannel == null)
             {
                 await RespondAsync("Nie wiem jaki kanał głosowy opuścić");
@@ -40,7 +27,7 @@ namespace KebabBot.Modules
 
             try
             {
-                await _lavaNode.LeaveAsync(voiceChannel);
+                await lavaNode.LeaveAsync(voiceChannel);
                 await RespondAsync($"Opusczam kanał: {voiceChannel.Name}!");
             }
             catch (Exception exception)
@@ -56,89 +43,83 @@ namespace KebabBot.Modules
                 await RespondAsync("Musisz uzupełnić pole wyszukiwania");
                 return;
             }
-
-            if (!_lavaNode.TryGetPlayer(Context.Guild, out var player))
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player == null)
             {
                 var voiceState = Context.User as IVoiceState;
                 if (voiceState?.VoiceChannel == null)
                 {
-                    await RespondAsync("Muszę być na kanale głosowym!");
+                    await RespondAsync("Musisz być na kanale głosowym!");
                     return;
                 }
 
                 try
                 {
-                    player = await _lavaNode.JoinAsync(voiceState.VoiceChannel, Context.Channel as ITextChannel);
-                    await player.SetVolumeAsync(_volume);
+                    player = await lavaNode.JoinAsync(voiceState.VoiceChannel, Context.Channel as ITextChannel);
                     await ReplyAsync($"Dołączam do: {voiceState.VoiceChannel.Name}!");
+                    await player.SetVolumeAsync(lavaNode, volume);
                 }
                 catch (Exception exception)
                 {
-                    await RespondAsync(exception.Message);
+                    await ReplyAsync(exception.Message);
                 }
             }
-            var searchResponse = await _lavaNode.SearchAsync(Uri.IsWellFormedUriString(searchQuery, UriKind.Absolute) ? SearchType.Direct : SearchType.YouTube, searchQuery);
-            if (searchResponse.Status is SearchStatus.LoadFailed or SearchStatus.NoMatches)
+            var searchResponse = await lavaNode.LoadTrackAsync(searchQuery);
+            switch (searchResponse.Type)
             {
-                await ReplyAsync($"Nie znalazłem nic o nazwie: `{searchQuery}`.");
-                return;
-            }
+                case SearchType.Empty:
+                case SearchType.Error:
+                    await ReplyAsync($"Nie mogłem puścić nic dla `{searchQuery}`.");
+                    return;
+                case SearchType.Track:
+                    var t1 = searchResponse.Tracks.FirstOrDefault();
+                    player.GetQueue().Enqueue(t1);
+                    await RespondAsync($"Dodałem {t1?.Title} do kolejki.");
+                    break;
+                    case SearchType.Playlist:
+                    foreach (var t2 in searchResponse.Tracks)
+                    {
+                        player.GetQueue().Enqueue(t2);
+                    }
+                    await RespondAsync($"Dodałem do kolejki {searchResponse.Tracks.Count} utworów.");
+                    break;
 
-            if (!string.IsNullOrWhiteSpace(searchResponse.Playlist.Name))
-            {
-                player.Vueue.Enqueue(searchResponse.Tracks);
-                await RespondAsync($"Dodałem do kolejki {searchResponse.Tracks.Count} utworów.");
             }
-            else
-            {
-                var track = searchResponse.Tracks.FirstOrDefault();
-                player.Vueue.Enqueue(track);
-                await RespondAsync($"Dodałem {track?.Title} do kolejki.");
-            }
-
-            if (player.PlayerState is PlayerState.Playing or PlayerState.Paused)
-            {
-                return;
-            }
-
-            player.Vueue.TryDequeue(out var lavaTrack);
-            await player.PlayAsync(lavaTrack);
-            await player.SetVolumeAsync(_volume);
+            player.GetQueue().TryDequeue(out var queueable);
+            await player.PlayAsync(lavaNode, queueable);
+            await player.SetVolumeAsync(lavaNode, volume);
 
         }
         [SlashCommand("volume", "Zmienia głośność")]
-        public async Task Volume(int volume)
+        public async Task Volume(int _volume)
         {
-            _volume = volume;
-            if (!_lavaNode.TryGetPlayer(Context.Guild, out var player))
+            volume = _volume;
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player == null)
             {
                 await RespondAsync("Nie jestem na żadnym kanale głosowym!");
                 return;
             }
-            await player.SetVolumeAsync(volume);
+            await player.SetVolumeAsync(lavaNode, volume);
             await RespondAsync($"Zmieniono głośność na {volume}.");
         }
         [SlashCommand("skip", "skipuje nutke")]
         public async Task Skip()
         {
-            if (!_lavaNode.TryGetPlayer(Context.Guild, out var player))
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player == null)
             {
                 await RespondAsync("Nie jestem na żadnym kanale głosowym!");
                 return;
             }
-            else if(player.Vueue.Count == 0)
-            {
-                await player.StopAsync();
-            }
-            else await player.SkipAsync();
-
-            await player.SetVolumeAsync(_volume);
+            var a = await player.SkipAsync(lavaNode);
             await RespondAsync("Pominięto utwór.");
         }
         [SlashCommand("current_volume", "wyświetla obecny poziom głośności")]
         public async Task CurrVolume()
         {
-            if (!_lavaNode.TryGetPlayer(Context.Guild, out var player))
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player == null)
             {
                 await RespondAsync("Nie jestem na żadnym kanale głosowym!");
                 return;
@@ -148,7 +129,8 @@ namespace KebabBot.Modules
         [SlashCommand("playlist","wyświetla listę utworów w kolejce")]
         public async Task Playlist()
         {
-            if (!_lavaNode.TryGetPlayer(Context.Guild, out var player))
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player == null)
             {
                 var voiceState = Context.User as IVoiceState;
                 if (voiceState?.IsStreaming == false)
@@ -160,7 +142,7 @@ namespace KebabBot.Modules
             var count = 1;
             var response = "";
             await RespondAsync("Playlista:");
-            foreach (var song in player.Vueue)
+            foreach (var song in player.GetQueue())
             {
                 response += $"{count}. {song.Title}\n";
                 count++;
@@ -170,12 +152,13 @@ namespace KebabBot.Modules
         [SlashCommand("remove", "usuwa piosenkę z danej pozycji w kolejce")]
         public async Task RemoveSong(int position)
         {
-            if (!_lavaNode.TryGetPlayer(Context.Guild, out var player))
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player == null)
             {
                 await RespondAsync("Nie jestem na żadnym kanale głosowym!");
                 return;
             }
-            else if (position > player.Vueue.Count)
+            else if (position > player.Queue.Count)
             {
                 await RespondAsync("Wybrana pozycja jest mniejsza niż liczba pozycji w kolejce!");
                 return;
@@ -187,7 +170,7 @@ namespace KebabBot.Modules
             }
             else
             {
-                player.Vueue.RemoveAt(position-1);
+                player.Queue.RemoveAt(position-1);
                 await RespondAsync($"Usunięto utwór na pozycji {position}.");
             }
         }
@@ -197,7 +180,8 @@ namespace KebabBot.Modules
         {
             if (tytuł == null)
             {
-                if ((!_lavaNode.TryGetPlayer(Context.Guild, out var player)) || player.PlayerState != PlayerState.Playing)
+                var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+                if (player == null || !player.State.IsConnected)
                 {
                     await RespondAsync("Nic nie gram i nie wpisano tytułu piosenki!");
                     return;
@@ -219,7 +203,8 @@ namespace KebabBot.Modules
         [SlashCommand("pause","pauzuje muzyczke")]
         public async Task Pause()
         {
-            if (!_lavaNode.TryGetPlayer(Context.Guild, out var player))
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player == null)
             {
                 var voiceState = Context.User as IVoiceState;
                 if (voiceState?.IsStreaming == false)
@@ -228,13 +213,15 @@ namespace KebabBot.Modules
                     return;
                 }
             }
-            await player.PauseAsync();
+            player.GetQueue().EnqueueFirst(player.Track);
+            await player.PauseAsync(lavaNode);
             await RespondAsync("Zapauzowano muzykę!");
         }
         [SlashCommand("resume", "wznów muzyczke")]
         public async Task Resume()
         {
-            if (!_lavaNode.TryGetPlayer(Context.Guild, out var player))
+            var player = await lavaNode.TryGetPlayerAsync(Context.Guild.Id);
+            if (player == null)
             {
                 var voiceState = Context.User as IVoiceState;
                 if (voiceState?.IsStreaming == false)
@@ -243,7 +230,7 @@ namespace KebabBot.Modules
                     return;
                 }
             }
-            await player.ResumeAsync();
+            await player.ResumeAsync(lavaNode,player.GetQueue().First());
             await RespondAsync("Wznowiono muzykę!");
         }
 
